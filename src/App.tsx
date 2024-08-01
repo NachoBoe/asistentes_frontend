@@ -41,7 +41,7 @@ const sendFeedback = async (
   if (feedbackContainer) {
     feedbackContainer.remove();
   }
-
+  console.log(tabId)
   try {
     // Find the index of the responseMessage in the chatHistory
     const responseIndex = chatHistory.findIndex((msg) => msg.text === responseMessage);
@@ -330,7 +330,6 @@ const App: React.FC = () => {
             // Generate a new key when creating the message
             messageContainerKey = Date.now().toString();
             // eslint-disable-next-line no-loop-func
-
             setChat((prevChat) => [
               ...prevChat,
               createAgentMessage(fullMessage, messageContainerKey),
