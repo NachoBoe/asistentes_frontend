@@ -21,7 +21,7 @@ const escapeHTML = (text: string) => {
   return text.replace(/[&<>"']/g, (m) => map[m]);
 };
 
-const url_str = "http://127.0.0.1:8000";
+const url_str = "https://btasistentes.azurewebsites.net/";
 
 const sendFeedback = async (
   feedbackText: string,
