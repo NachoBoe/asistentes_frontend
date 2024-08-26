@@ -21,8 +21,8 @@ const escapeHTML = (text: string) => {
   return text.replace(/[&<>"']/g, (m) => map[m]);
 };
 
-const url_str = "http://127.0.0.1:8000";
-
+const url_str = import.meta.env.VITE_ASISTENTES_URL;
+console.log(url_str)
 const sendFeedback = async (
   feedbackText: string,
   button: HTMLElement,
