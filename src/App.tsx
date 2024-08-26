@@ -21,7 +21,7 @@ const escapeHTML = (text: string) => {
   return text.replace(/[&<>"']/g, (m) => map[m]);
 };
 
-const url_str = "https://btasistentes.azurewebsites.net/";
+const url_str = "http://127.0.0.1:8000";
 
 const sendFeedback = async (
   feedbackText: string,
@@ -30,9 +30,8 @@ const sendFeedback = async (
   tabId: string,
   endpoint: string,
   chatHistory: (HumanMessage | AIMessage)[],
-  responseMessage: string // Parameter for the current AI message
+  responseMessage: string
 ) => {
-  // Immediately hide the feedback menu before sending the request
   const feedbackOptions = button.closest(".feedback-options") as HTMLElement;
   if (feedbackOptions) {
     feedbackOptions.style.display = "none";
@@ -43,7 +42,6 @@ const sendFeedback = async (
   }
   console.log(tabId)
   try {
-    // Find the index of the responseMessage in the chatHistory
     const responseIndex = chatHistory.findIndex((msg) => msg.text === responseMessage);
 
     if (responseIndex === -1) {
@@ -51,17 +49,14 @@ const sendFeedback = async (
       return;
     }
 
-    // Get all messages prior to the response message for chatHistory
     const previousMessages = chatHistory.slice(0, responseIndex);
-
-    // Get the message immediately preceding the response message
     const previousUserMessage = chatHistory[responseIndex - 1]?.text || "N/A";
 
     const body = {
       isPositive: isPositive ? "positive" : "negative",
       comentario: feedbackText,
-      mensaje: previousUserMessage, // Previous message before the response
-      respuesta: responseMessage,   // The message which triggered the feedback
+      mensaje: previousUserMessage,
+      respuesta: responseMessage,
       historial: previousMessages.map((msg) => [
         msg instanceof HumanMessage ? "human" : "ai",
         msg.text,
@@ -87,15 +82,12 @@ const sendFeedback = async (
   }
 };
 
-
-
 const toggleFeedbackOptions = (
   button: HTMLElement,
   shouldCloseFeedback: React.MutableRefObject<boolean>
 ) => {
   const options = button.nextElementSibling as HTMLElement;
 
-  // Check if options exist and log if not found
   if (!options) {
     console.error("Feedback options element not found. Check DOM structure.");
     return;
@@ -103,7 +95,6 @@ const toggleFeedbackOptions = (
 
   const feedbackContainer = document.querySelector(".feedback-container");
 
-  // Toggle display of feedback options
   if (options.style.display === "block") {
     options.style.display = "none";
     if (feedbackContainer) {
@@ -121,15 +112,68 @@ const toggleFeedbackOptions = (
     }, 0);
   }
 };
+const Login = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      const response = await fetch("https://support.dlya.com.uy/SGRAPI/rest/loginCentroDeSoporte", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Login: username,
+          Pass: password,
+        }),
+      });
 
+      const data = await response.json();
+
+      if (data.Res === "S") {
+        onLoginSuccess();
+      } else {
+        setErrorMessage("Incorrect username or password.");
+      }
+    } catch (error) {
+      setErrorMessage("An error occurred during login. Please try again.");
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <h2>Login</h2>
+      <form onSubmit={handleLogin}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Login</button>
+      </form>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+    </div>
+  );
+};
 const showFeedbackBox = (
   button: HTMLElement,
   shouldCloseFeedback: React.MutableRefObject<boolean>,
   tabId: string,
   endpoint: string,
   chatHistory: (HumanMessage | AIMessage)[],
-  responseMessage: string // Added parameter for response message
+  responseMessage: string
 ) => {
   let existingFeedbackBox = document.querySelector(".feedback-container");
   if (existingFeedbackBox) {
@@ -159,14 +203,13 @@ const showFeedbackBox = (
         tabId,
         endpoint,
         chatHistory,
-        responseMessage // Pass responseMessage here
+        responseMessage
       );
       feedbackContainer.remove();
       (button.parentNode as HTMLElement).style.display = "none";
     }
   });
 
-  // Evita que el menú se cierre al hacer clic en la caja de texto
   feedbackBox.addEventListener("click", (event) => {
     event.stopPropagation();
   });
@@ -192,7 +235,6 @@ const showFeedbackBox = (
   }, 0);
 };
 
-
 const closeFeedbackAndMenu = (event: MouseEvent, shouldCloseFeedback: React.MutableRefObject<boolean>) => {
   const feedbackOptions = document.querySelector('.feedback-options');
   const feedbackContainer = document.querySelector('.feedback-container');
@@ -210,7 +252,6 @@ const closeFeedbackAndMenu = (event: MouseEvent, shouldCloseFeedback: React.Muta
   }
 };
 
-// Nueva función para procesar chunks
 const processChunk = (chunk: any) => {
   if (chunk.event === 'on_chat_model_stream') {
     return chunk.data.chunk.content;
@@ -219,6 +260,7 @@ const processChunk = (chunk: any) => {
 };
 
 const App: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [message, setMessage] = useState('');
   const [chat, setChat] = useState<JSX.Element[]>([]);
   const [awaitingResponse, setAwaitingResponse] = useState(false);
@@ -264,43 +306,44 @@ const App: React.FC = () => {
       setEndpoint("core");
     } else if (selectedVersion === "capacitacion") {
       setEndpoint("capacitacion");
-    } 
-    handleNewChat(); // Reinicia el chat al cambiar la versión
+    }
+    handleNewChat();
   };
 
   const processMsg = (text: string) => {
     const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
     let processedText = text.replace(linkRegex, '<a href="$2" target="_blank">$1</a>')
-            .replace(/####\s*(.+?)\n/g, '<h4>$1</h4>')
-            .replace(/###\s*(.+?)\n/g, '<h3>$1</h3>')
-            .replace(/##\s*(.+?)\n/g, '<h2>$1</h2>')
-            .replace(/```json\n([\s\S]+?)\n```/g, '<pre><code class="json">$1</code></pre>')
-            .replace(/```xml\n([\s\S]+?)\n```/g, '<pre><code class="xml">$1</code></pre>')
-            .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      .replace(/####\s*(.+?)\n/g, '<h4>$1</h4>')
+      .replace(/###\s*(.+?)\n/g, '<h3>$1</h3>')
+      .replace(/##\s*(.+?)\n/g, '<h2>$1</h2>')
+      .replace(/```json\n([\s\S]+?)\n```/g, '<pre><code class="json">$1</code></pre>')
+      .replace(/```xml\n([\s\S]+?)\n```/g, '<pre><code class="xml">$1</code></pre>')
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     return processedText;
   };
 
   const chunkProcess = (text: string) => {
     return text.replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/\|\|/g, '<br>')
-              .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+      .replace(/>/g, '&gt;')
+      .replace(/\|\|/g, '<br>')
+      .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
   };
+
   const sendMessage = async () => {
     if (awaitingResponse || !message.trim()) return;
-  
+
     stopMessageInput();
-  
+
     const userMessage = (
       <div className="message-container user" key={Date.now()}>
         <div className="message">{escapeHTML(message)}</div>
       </div>
     );
     setChat((prevChat) => [...prevChat, userMessage]);
-  
+
     try {
       chatHistory.current.push(new HumanMessage(message));
-  
+
       const logStream = await remoteChain.streamEvents(
         {
           input: message,
@@ -316,26 +359,23 @@ const App: React.FC = () => {
           },
         }
       );
-  
+
       let fullMessage = "";
-      let messageContainerKey = ""; // Initialize with an empty string
-  
+      let messageContainerKey = "";
+
       for await (const chunk of logStream) {
         const processedContent = processChunk(chunk);
         if (processedContent) {
           fullMessage += chunkProcess(processedContent);
           fullMessage = processMsg(fullMessage);
-  
+
           if (!messageContainerKey) {
-            // Generate a new key when creating the message
             messageContainerKey = Date.now().toString();
-            // eslint-disable-next-line no-loop-func
             setChat((prevChat) => [
               ...prevChat,
               createAgentMessage(fullMessage, messageContainerKey),
             ]);
           } else {
-            // eslint-disable-next-line no-loop-func
             setChat((prevChat) =>
               prevChat.map((message) =>
                 message.key === messageContainerKey
@@ -346,7 +386,7 @@ const App: React.FC = () => {
           }
         }
       }
-  
+
       chatHistory.current.push(new AIMessage(fullMessage));
       startMessageInput();
     } catch (error) {
@@ -354,8 +394,7 @@ const App: React.FC = () => {
       startMessageInput();
     }
   };
-  
-  // Adjust this function to use the messageContainerKey correctly
+
   const createAgentMessage = (fullMessage: string, key: string) => (
     <div className="message-container agent" key={key}>
       <img src="static/minilogo.png" alt="Avatar" className="avatar" />
@@ -400,7 +439,7 @@ const App: React.FC = () => {
         </div>
       </div>
     </div>
-  );  
+  );
 
   const stopMessageInput = () => {
     if (messageRef.current) {
@@ -424,12 +463,16 @@ const App: React.FC = () => {
     const handleAdjustHeight = () => adjustHeight(messageRef);
 
     window.addEventListener('resize', handleAdjustHeight);
-    handleAdjustHeight(); // Llamada inicial para ajustar la altura correctamente
+    handleAdjustHeight();
 
     return () => {
       window.removeEventListener('resize', handleAdjustHeight);
     };
   }, []);
+
+  if (!isLoggedIn) {
+    return <Login onLoginSuccess={() => setIsLoggedIn(true)} />;
+  }
 
   return (
     <div id="content">
