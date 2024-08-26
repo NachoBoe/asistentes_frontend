@@ -471,8 +471,11 @@ const App: React.FC = () => {
   }, []);
 
   if (!isLoggedIn) {
-    return <Login onLoginSuccess={() => setIsLoggedIn(true)} />;
-  }
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width:'100vw' }}>
+        <Login onLoginSuccess={() => setIsLoggedIn(true)} />
+      </div>
+    );  }
 
   return (
     <div id="content">
@@ -483,9 +486,7 @@ const App: React.FC = () => {
           <div className="select-container">
             <select id="versionSelect" onChange={selectVersion} className="select-with-icons">
               <option value="APIdocs" className="option-icon api-icon">API</option>
-              <option value="core" className="option-icon core-icon">Core</option>
               <option value="migracion" className="option-icon migracion-icon">Migración</option>
-              <option value="capacitacion" className="option-icon migracion-icon">Capacitación</option>
             </select>
           </div>
         </div>

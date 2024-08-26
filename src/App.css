@@ -422,6 +422,8 @@ code.xml {
 .migracion-icon {
   background-image: url('static/migracion.jpg');
 }
+
+/* Estilos del contenedor de login */
 .login-container {
   max-width: 400px;
   width: 100%;
