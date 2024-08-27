@@ -265,7 +265,6 @@ const App: React.FC = () => {
   const [chat, setChat] = useState<JSX.Element[]>([]);
   const [awaitingResponse, setAwaitingResponse] = useState(false);
   const messageRef = useRef<HTMLTextAreaElement>(null);
-  const [endpoint, setEndpoint] = useState("APIdocs");
   const shouldCloseFeedback = useRef(true);
   const chatHistory = useRef<(HumanMessage | AIMessage)[]>([]);
 
@@ -278,6 +277,10 @@ const App: React.FC = () => {
     return id;
   }, []);
 
+  const endpoints: string[] = import.meta.env.VITE_APP_ENDPOINTS.split(",");
+
+  const [endpoint, setEndpoint] = useState(endpoints[0]);
+  
   const remoteChain = useMemo(() => new RemoteRunnable({
     url: `${url_str}/${endpoint}`,
   }), [endpoint]);
@@ -296,19 +299,18 @@ const App: React.FC = () => {
     };
   }, [tabId]);
 
+
   const selectVersion = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedVersion = event.target.value;
-    if (selectedVersion === "APIdocs") {
-      setEndpoint("APIdocs");
-    } else if (selectedVersion === "migracion") {
-      setEndpoint("migracion");
-    } else if (selectedVersion === "core") {
-      setEndpoint("core");
-    } else if (selectedVersion === "capacitacion") {
-      setEndpoint("capacitacion");
+    for (const endpoint of endpoints) {
+      if (selectedVersion === endpoint) {
+        setEndpoint(endpoint);
+        break;
+      }
     }
     handleNewChat();
   };
+  
 
   const processMsg = (text: string) => {
     const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
@@ -484,10 +486,13 @@ const App: React.FC = () => {
           <button id="newChatButton">+</button>
           <h2><img src="static/logoBT.png" alt="Bantotal Logo" width="300" height="auto" /></h2>
           <div className="select-container">
-            <select id="versionSelect" onChange={selectVersion} className="select-with-icons">
-              <option value="APIdocs" className="option-icon api-icon">API</option>
-              <option value="migracion" className="option-icon migracion-icon">Migración</option>
-            </select>
+          <select id="versionSelect" onChange={selectVersion} className="select-with-icons">
+            {endpoints.map((endpoint) => (
+              <option key={endpoint} value={endpoint}>
+                {endpoint}
+              </option>
+            ))}
+          </select>
           </div>
         </div>
       </div>
