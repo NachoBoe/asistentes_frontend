@@ -20,6 +20,8 @@ const escapeHTML = (text: string) => {
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
 };
+console.log("hola");
+console.log(window.__RUNTIME_CONFIG__);
 
 // const url_str = import.meta.env.VITE_ASISTENTES_URL;
 const url_str: string = window.__RUNTIME_CONFIG__.VITE_ASISTENTES_URL;
