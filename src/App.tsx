@@ -21,8 +21,11 @@ const escapeHTML = (text: string) => {
   return text.replace(/[&<>"']/g, (m) => map[m]);
 };
 
-const url_str = import.meta.env.VITE_ASISTENTES_URL;
+// const url_str = import.meta.env.VITE_ASISTENTES_URL;
+const url_str: string = window.__RUNTIME_CONFIG__.VITE_ASISTENTES_URL;
 console.log(url_str)
+
+
 const sendFeedback = async (
   feedbackText: string,
   button: HTMLElement,
@@ -276,9 +279,9 @@ const App: React.FC = () => {
     }
     return id;
   }, []);
-
-  const endpoints: string[] = import.meta.env.VITE_APP_ENDPOINTS.split(",");
-
+  
+  // const endpoints: string[] = import.meta.env.VITE_APP_ENDPOINTS.split(",");
+  const endpoints: string[] = window.__RUNTIME_CONFIG__.VITE_APP_ENDPOINTS.split(",");
   const [endpoint, setEndpoint] = useState(endpoints[0]);
   
   const remoteChain = useMemo(() => new RemoteRunnable({
