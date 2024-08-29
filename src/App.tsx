@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './App.css';
 import { RemoteRunnable } from "@langchain/core/runnables/remote";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const adjustHeight = (messageRef: React.RefObject<HTMLTextAreaElement>) => {
   if (messageRef.current) {
@@ -20,11 +21,10 @@ const escapeHTML = (text: string) => {
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
 };
-console.log("hola");
-console.log(window.__RUNTIME_CONFIG__);
 
-// const url_str = import.meta.env.VITE_ASISTENTES_URL;
-const url_str: string = window.__RUNTIME_CONFIG__.VITE_ASISTENTES_URL;
+
+const url_str = import.meta.env.VITE_ASISTENTES_URL;
+// const url_str: string = window.__RUNTIME_CONFIG__.VITE_ASISTENTES_URL;
 console.log(url_str)
 
 
@@ -270,6 +270,7 @@ const App: React.FC = () => {
   const [chat, setChat] = useState<JSX.Element[]>([]);
   const [awaitingResponse, setAwaitingResponse] = useState(false);
   const messageRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const shouldCloseFeedback = useRef(true);
   const chatHistory = useRef<(HumanMessage | AIMessage)[]>([]);
 
@@ -282,8 +283,11 @@ const App: React.FC = () => {
     return id;
   }, []);
   
-  // const endpoints: string[] = import.meta.env.VITE_APP_ENDPOINTS.split(",");
-  const endpoints: string[] = window.__RUNTIME_CONFIG__.VITE_APP_ENDPOINTS.split(",");
+  const endpoints: string[] = import.meta.env.VITE_APP_ENDPOINTS.split(",");
+  const uploadEndpoints: string[] = import.meta.env.VITE_APP_UPLOADENDPOINTS.split(",");
+  console.log(endpoints)
+  console.log(uploadEndpoints)
+  // const endpoints: string[] = window.__RUNTIME_CONFIG__.VITE_APP_ENDPOINTS.split(",");
   const [endpoint, setEndpoint] = useState(endpoints[0]);
   
   const remoteChain = useMemo(() => new RemoteRunnable({
@@ -291,8 +295,31 @@ const App: React.FC = () => {
   }), [endpoint]);
 
   const handleNewChat = async () => {
-    setChat([]);
-    chatHistory.current = [];
+    try {
+      // Replace 'userId' with the actual user ID variable if you have it
+      const userId = tabId;  // Adjust this to retrieve the actual user ID
+      
+      const formData = new FormData();
+      formData.append('userId', userId);
+  
+      const response = await fetch(url_str + '/delete_files', {
+        method: 'DELETE',
+        body: formData,
+      });
+  
+      if (response.ok) {
+        console.log("All files have been successfully deleted.");
+      } else {
+        console.error("Failed to delete files:", await response.json());
+      }
+  
+      // Clear the chat history after deleting the files
+      setChat([]);
+      chatHistory.current = [];
+  
+    } catch (error) {
+      console.error("Error while deleting files:", error);
+    }
   };
 
   useEffect(() => {
@@ -315,6 +342,94 @@ const App: React.FC = () => {
     }
     handleNewChat();
   };
+  // Handler for file upload
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      const allowedExtensions = ['pdf', 'docx', 'odt'];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        const errorMessage = (
+          <div className="message-container agent" key={Date.now()}>
+            <img src="static/minilogo.png" alt="Avatar" className="avatar" />
+            <div className="message">
+              <div>Solo se permiten archivos PDF, DOCX, y ODT.</div>
+            </div>
+          </div>
+        );
+        setChat((prevChat) => [...prevChat, errorMessage]);
+
+        return;
+      }
+  
+  
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', tabId);
+  
+      try {
+        const response = await fetch(url_str + '/upload', {
+          method: 'POST',
+          body: formData,
+        });
+  
+        if (!response.ok) {
+          const serverError = await response.json();
+          const error_text: string = `Error al subir el archivo: ${serverError.message}`;
+          const errorMessage = (
+            <div className="message-container agent" key={Date.now()}>
+              <img src="static/minilogo.png" alt="Avatar" className="avatar" />
+              <div className="message">
+                <div>{error_text}</div>
+              </div>
+            </div>
+          );
+          setChat((prevChat) => [...prevChat, errorMessage]);
+          chatHistory.current.push(new AIMessage(error_text));
+
+        } else {
+          const success_text: string = `El documento ${file.name} fue agregado correctamente`;
+          const successMessage = (
+            <div className="message-container agent" key={Date.now()}>
+              <img src="static/minilogo.png" alt="Avatar" className="avatar" />
+              <div className="message">
+                <div>{success_text}</div>
+              </div>
+            </div>
+          );
+          setChat((prevChat) => [...prevChat, successMessage]);
+          chatHistory.current.push(new AIMessage(success_text));
+
+        }
+      } catch (error) {        
+        // Type guard to check if error has a 'message' property
+        const error_text_2: string = `Error al subir el archivo: ${(error as Error).message}`;
+        const errorMessage = (
+          <div className="message-container agent" key={Date.now()}>
+            <img src="static/minilogo.png" alt="Avatar" className="avatar" />
+            <div className="message">
+              <div>{error_text_2}</div>
+            </div>
+          </div>
+        );
+        setChat((prevChat) => [...prevChat, errorMessage]);
+        chatHistory.current.push(new AIMessage(error_text_2));
+      }
+      fileInputRef.current!.value = '';
+    }
+  };
+  
+
+
+  
+  const triggerFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+
   
 
   const processMsg = (text: string) => {
@@ -349,7 +464,6 @@ const App: React.FC = () => {
     setChat((prevChat) => [...prevChat, userMessage]);
 
     try {
-      chatHistory.current.push(new HumanMessage(message));
 
       const logStream = await remoteChain.streamEvents(
         {
@@ -359,10 +473,9 @@ const App: React.FC = () => {
         {
           version: "v1",
           configurable: {
-            llm: "openai_gpt_3_5_turbo",
+            user_id: tabId,
           },
           metadata: {
-            conversation_id: tabId,
           },
         }
       );
@@ -393,7 +506,7 @@ const App: React.FC = () => {
           }
         }
       }
-
+      chatHistory.current.push(new HumanMessage(message));
       chatHistory.current.push(new AIMessage(fullMessage));
       startMessageInput();
     } catch (error) {
@@ -482,25 +595,27 @@ const App: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width:'100vw' }}>
         <Login onLoginSuccess={() => setIsLoggedIn(true)} />
       </div>
-    );  }
+    );  
+  }
 
   return (
     <div id="content">
       <div className="top-section">
         <div className="header">
-          <button id="newChatButton">+</button>
+          <button id="newChatButton" onClick={handleNewChat}>+</button>
           <h2><img src="static/logoBT.png" alt="Bantotal Logo" width="300" height="auto" /></h2>
           <div className="select-container">
-          <select id="versionSelect" onChange={selectVersion} className="select-with-icons">
-            {endpoints.map((endpoint) => (
-              <option key={endpoint} value={endpoint}>
-                {endpoint}
-              </option>
-            ))}
-          </select>
+            <select id="versionSelect" onChange={selectVersion} className="select-with-icons">
+              {endpoints.map((endpoint) => (
+                <option key={endpoint} value={endpoint}>
+                  {endpoint}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
+
       <div id="chat">
         {chat}
       </div>
@@ -520,12 +635,26 @@ const App: React.FC = () => {
           }}
           onChange={(e) => setMessage(e.target.value)}
         />
+        <div
+          id="uploadButton"
+          onClick={uploadEndpoints.includes(endpoint) ? triggerFileUpload : undefined}
+          className={uploadEndpoints.includes(endpoint) ? "enabled-button" : "disabled-button"}
+        >
+          <i id="clipIcon" className="clipIcon"></i>
+        </div>
         <div id="sendButton" onClick={sendMessage}>
           <i id="sendIcon" className="sendIcon"></i>
         </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
       </div>
     </div>
   );
 };
 
 export default App;
+

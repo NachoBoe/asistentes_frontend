@@ -1,5 +1,5 @@
 
 window.__RUNTIME_CONFIG__ = {
-  VITE_ASISTENTES_URL: "http://127.0.0.1:8000",
-  VITE_APP_ENDPOINTS: "APIdocs,migracion,core,capacitacion,pseudoCode"
+  VITE_ASISTENTES_URL: "https://btasistentes.azurewebsites.net/",
+  VITE_APP_ENDPOINTS: "pseudoCode,requerimientos,APIdocs"
 };

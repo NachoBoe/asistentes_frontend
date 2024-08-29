@@ -469,3 +469,51 @@ code.xml {
   text-align: center;
   margin-top: 10px;
 }
+
+
+
+#message-container {
+  display: flex;
+  align-items: center;
+}
+
+#clipIcon {
+  font-size: 24px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.clipIcon:before {
+  content: '\f0c6'; /* FontAwesome clip icon */
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+}
+
+#sendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+#uploadButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.enabled-button {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.disabled-button {
+  opacity: 0.5;
+  cursor: default; /* This will change the cursor to the default arrow */
+}
+
+.disabled-button:hover {
+  cursor: default; /* Ensures that even on hover, the cursor does not change */
+}
