@@ -607,7 +607,7 @@ const App: React.FC = () => {
           <div className="select-container">
             <select id="versionSelect" onChange={selectVersion} className="select-with-icons">
               {endpoints.map((endpoint) => (
-                <option key={endpoint} value={endpoint}>
+                <option key={endpoint.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} value={endpoint}>
                   {endpoint}
                 </option>
               ))}
