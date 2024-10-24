@@ -29,7 +29,7 @@ const escapeHTML = (text: string) => {
 
 const url_str = import.meta.env.VITE_ASISTENTES_URL;
 let globalUsername = '';
-
+console.log(globalUsername)
 const sendFeedback = async (
   feedbackText: string,
   button: HTMLElement,
