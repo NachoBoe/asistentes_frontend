@@ -3,7 +3,7 @@
     "migracion": "¡Hola! Puedes preguntarme sobre cómo funciona el proceso de migración a Bantotal. ¿En qué puedo ayudarte?",
     "core": "¡Hola! ¿En qué puedo ayudarte hoy con respecto al sistema Bantotal?",
     "capacitacion": "¡Hola! ¿En qué puedo ayudarte hoy?",
-    "pseudo_codigo": "¡Hola! Si necesitas ayuda con algún código de GeneXus, no dudes en enviarlo y estaré encantado de ayudarte a generar pseudocódigo en formato descriptivo o responder cualquier pregunta que tengas sobre él.",
-    "requerimientos": "¡Hola! Puedes subir un documento con un requerimiento y estaré encantado de ayudarte a responder tus preguntas sobre él.",
+    "pseudo_codigo": "¡Hola! Si necesitas ayuda con algún código de GeneXus, no dudes en enviarlo y estaré encantado de ayudarte a generar pseudocódigo en formato descriptivo o responder cualquier pregunta que tengas sobre él. \n\n Preguntas frecuentes: \n\n - ¿Cuáles son las tablas involucradas? \n - ¿Cuáles son los programas involucrados?",
+    "requerimientos": "¡Hola! Puedes subir un documento con un requerimiento y estaré encantado de ayudarte a responder tus preguntas sobre él. \n\n Preguntas frecuentes: \n\n - ¿Cuál es el objetivo del requerimiento? \n - ¿Cuál es el alcance del requerimiento?",
     "instalador": "¡Hola! ¿En qué puedo ayudarte hoy con el proceso de instalación de Bantotal?"
   }

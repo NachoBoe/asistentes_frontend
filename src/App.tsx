@@ -270,13 +270,28 @@ const processChunk = (chunk: any) => {
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [message, setMessage] = useState('');
-  const [chat, setChat] = useState<JSX.Element[]>([]);
   const [awaitingResponse, setAwaitingResponse] = useState(false);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shouldCloseFeedback = useRef(true);
   const chatHistory = useRef<(HumanMessage | AIMessage)[]>([]);
-
+  const [chat, setChat] = useState<JSX.Element[]>([]);
+  useEffect(() => {
+    // El código que tienes para agregar un mensaje
+    const key: InitialFrasesKeys = endpoint as InitialFrasesKeys;
+    const init_text: string = initialFrases[key];
+    const initMessage = (
+      <div className="message-container agent" key={Date.now()}>
+        <img src="static/minilogo.png" alt="Avatar" className="avatar" />
+        <div className="message">
+          <div>{init_text}</div>
+        </div>
+      </div>
+    );
+    // Agregas el mensaje inicial al chat
+    setChat((prevChat) => [...prevChat, initMessage]);
+    chatHistory.current.push(new AIMessage(init_text));
+  }, []);
   const tabId = useMemo(() => {
     let id = sessionStorage.getItem('tabId');
     if (!id) {
