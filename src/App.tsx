@@ -3,6 +3,10 @@ import './App.css';
 import { RemoteRunnable } from "@langchain/core/runnables/remote";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import initialFrases from './initialFrases.json';
+
+
+type InitialFrasesKeys = keyof typeof initialFrases;
 
 const adjustHeight = (messageRef: React.RefObject<HTMLTextAreaElement>) => {
   if (messageRef.current) {
@@ -24,9 +28,7 @@ const escapeHTML = (text: string) => {
 
 
 const url_str = import.meta.env.VITE_ASISTENTES_URL;
-// const url_str: string = window.__RUNTIME_CONFIG__.VITE_ASISTENTES_URL;
-console.log(url_str)
-
+let globalUsername = '';
 
 const sendFeedback = async (
   feedbackText: string,
@@ -139,6 +141,7 @@ const Login = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => {
       const data = await response.json();
 
       if (data.Res === "S") {
+        globalUsername = username;
         onLoginSuccess();
       } else {
         setErrorMessage("Incorrect username or password.");
@@ -285,8 +288,16 @@ const App: React.FC = () => {
   
   const endpoints: string[] = import.meta.env.VITE_APP_ENDPOINTS.split(",");
   const uploadEndpoints: string[] = import.meta.env.VITE_APP_UPLOADENDPOINTS.split(",");
-  console.log(endpoints)
-  console.log(uploadEndpoints)
+  // const initialFrasesArray: string[] = import.meta.env.VITE_APP_INITIALFRASES.split(",");
+
+  // // Convertimos el array en un objeto clave-valor
+  // const initialFrases: { [key: string]: string } = initialFrasesArray.reduce((acc, item) => {
+  //   const [key, value] = item.split(":");
+  //   acc[key.trim()] = value.trim();
+  //   return acc;
+  // }, {} as { [key: string]: string });
+
+
   // const endpoints: string[] = window.__RUNTIME_CONFIG__.VITE_APP_ENDPOINTS.split(",");
   const [endpoint, setEndpoint] = useState(endpoints[0]);
   
@@ -294,7 +305,17 @@ const App: React.FC = () => {
     url: `${url_str}/${endpoint}`,
   }), [endpoint]);
 
-  const handleNewChat = async () => {
+    const handleNewChat = async (param?: string | Event) => {
+      let currentEndpoint = endpoint; // Valor por defecto
+    
+      if (typeof param === 'string') {
+        // Si 'param' es un string, es el 'currentEndpoint' proporcionado
+        currentEndpoint = param;
+      } else if (param && typeof param === 'object' && 'preventDefault' in param) {
+        // Si 'param' es un evento, podemos prevenir el comportamiento predeterminado si es necesario
+        // param.preventDefault();
+      }
+    
     try {
       // Replace 'userId' with the actual user ID variable if you have it
       const userId = tabId;  // Adjust this to retrieve the actual user ID
@@ -320,8 +341,19 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Error while deleting files:", error);
     }
+    const key: InitialFrasesKeys = currentEndpoint as InitialFrasesKeys;
+    const init_text: string = initialFrases[key];
+    const initMessage = (
+      <div className="message-container agent" key={Date.now()}>
+        <img src="static/minilogo.png" alt="Avatar" className="avatar" />
+        <div className="message">
+          <div>{init_text}</div>
+        </div>
+      </div>
+    );
+    setChat((prevChat) => [...prevChat, initMessage]);
+    chatHistory.current.push(new AIMessage(init_text));    
   };
-
   useEffect(() => {
     const newChatButton = document.getElementById('newChatButton');
     newChatButton?.addEventListener('click', handleNewChat);
@@ -334,13 +366,15 @@ const App: React.FC = () => {
 
   const selectVersion = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedVersion = event.target.value;
+    let newEndpoint = endpoint; // Variable para almacenar el nuevo endpoint
     for (const endpoint of endpoints) {
       if (selectedVersion === endpoint) {
+        newEndpoint = endpoint;
         setEndpoint(endpoint);
         break;
       }
     }
-    handleNewChat();
+    handleNewChat(newEndpoint);
   };
   // Handler for file upload
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -602,8 +636,8 @@ const App: React.FC = () => {
     <div id="content">
       <div className="top-section">
         <div className="header">
-          <button id="newChatButton" onClick={handleNewChat}>+</button>
-          <h2><img src="static/logoBT.png" alt="Bantotal Logo" width="300" height="auto" /></h2>
+        <button id="newChatButton" onClick={() => handleNewChat()}>+</button>
+        <h2><img src="static/logoBT.png" alt="Bantotal Logo" width="300" height="auto" /></h2>
           <div className="select-container">
             <select id="versionSelect" onChange={selectVersion} className="select-with-icons">
               {endpoints.map((endpoint) => (
