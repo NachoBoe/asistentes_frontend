@@ -124,7 +124,7 @@ const Login = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleLogin = async (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => { 
     event.preventDefault();
     try {
       const response = await fetch("https://support.dlya.com.uy/SGRAPI/rest/loginCentroDeSoporte", {
@@ -140,7 +140,11 @@ const Login = ({ onLoginSuccess }: { onLoginSuccess: () => void }) => {
 
       const data = await response.json();
 
-      if (data.Res === "S") {
+      if (
+        data.sdtContacto?.Sesion !== "" && 
+        Array.isArray(data.sdtErrores) && 
+        data.sdtErrores.length === 0
+      ) {
         globalUsername = username;
         onLoginSuccess();
       } else {
@@ -276,22 +280,22 @@ const App: React.FC = () => {
   const shouldCloseFeedback = useRef(true);
   const chatHistory = useRef<(HumanMessage | AIMessage)[]>([]);
   const [chat, setChat] = useState<JSX.Element[]>([]);
-  useEffect(() => {
-    // El código que tienes para agregar un mensaje
-    const key: InitialFrasesKeys = endpoint as InitialFrasesKeys;
-    const init_text: string = initialFrases[key];
-    const initMessage = (
-      <div className="message-container agent" key={Date.now()}>
-        <img src="static/minilogo.png" alt="Avatar" className="avatar" />
-        <div className="message">
-          <div>{init_text}</div>
-        </div>
-      </div>
-    );
-    // Agregas el mensaje inicial al chat
-    setChat((prevChat) => [...prevChat, initMessage]);
-    chatHistory.current.push(new AIMessage(init_text));
-  }, []);
+  // useEffect(() => {
+  //   // El código que tienes para agregar un mensaje
+  //   const key: InitialFrasesKeys = endpoint as InitialFrasesKeys;
+  //   const init_text: string = initialFrases[key];
+  //   const initMessage = (
+  //     <div className="message-container agent" key={Date.now()}>
+  //       <img src="static/minilogo.png" alt="Avatar" className="avatar" />
+  //       <div className="message">
+  //         <div>{init_text}</div>
+  //       </div>
+  //     </div>
+  //   );
+  //   // Agregas el mensaje inicial al chat
+  //   setChat((prevChat) => [...prevChat, initMessage]);
+  //   chatHistory.current.push(new AIMessage(init_text));
+  // }, []);
   const tabId = useMemo(() => {
     let id = sessionStorage.getItem('tabId');
     if (!id) {
@@ -639,7 +643,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  if (!isLoggedIn) {
+  if (!isLoggedIn) { 
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width:'100vw' }}>
         <Login onLoginSuccess={() => setIsLoggedIn(true)} />
