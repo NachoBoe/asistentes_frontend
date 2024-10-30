@@ -527,6 +527,7 @@ const App: React.FC = () => {
           version: "v1",
           configurable: {
             user_id: tabId,
+            asistente: endpoint,
           },
           metadata: {
           },
